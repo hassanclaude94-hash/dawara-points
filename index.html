@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>نظام النقاط — عائلة Dawara</title>
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #F7F5F0;
@@ -21,135 +22,75 @@
     --red: #9B2335;
     --red-light: #FDEAEA;
     --red-text: #7A1B29;
-    --accent: #2D6A4F;
     --radius: 16px;
     --radius-sm: 10px;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-
   body {
     font-family: 'Tajawal', sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
-    padding: 1.5rem 1rem 3rem;
+    padding: 1.25rem 1rem 3rem;
   }
 
-  header {
-    text-align: center;
-    margin-bottom: 2rem;
+  header { text-align: center; margin-bottom: 1.5rem; }
+  header h1 { font-size: 20px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+  .clock-wrap {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 40px; padding: 6px 16px; margin-top: 10px;
   }
-
-  header h1 {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--text);
-    letter-spacing: -0.5px;
+  .clock-time {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    font-variant-numeric: tabular-nums; letter-spacing: 1px;
   }
-
-  header p {
-    font-size: 13px;
-    color: var(--muted);
-    margin-top: 4px;
+  .clock-date { font-size: 12px; color: var(--muted); }
+  .clock-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--green); animation: pulse 1s infinite;
   }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
   .tabs {
-    display: flex;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 4px;
-    margin-bottom: 1.5rem;
-    gap: 4px;
+    display: flex; background: var(--card);
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 4px; margin-bottom: 1.25rem; gap: 4px;
   }
-
   .tab {
-    flex: 1;
-    padding: 8px;
-    border: none;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--muted);
-    cursor: pointer;
-    transition: all 0.2s;
+    flex: 1; padding: 8px; border: none; border-radius: var(--radius-sm);
+    background: transparent; font-family: 'Tajawal', sans-serif;
+    font-size: 13px; font-weight: 500; color: var(--muted);
+    cursor: pointer; transition: all 0.2s;
   }
-
-  .tab.active {
-    background: var(--bg);
-    color: var(--text);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  }
-
+  .tab.active { background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* ── Kid Cards ── */
-  .kids {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 1rem;
-  }
-
-  @media (max-width: 400px) {
-    .kids { grid-template-columns: 1fr; }
-  }
+  .kids { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1rem; }
+  @media (max-width: 400px) { .kids { grid-template-columns: 1fr; } }
 
   .kid-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1.25rem 1rem;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.1rem 1rem;
   }
-
   .kid-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 10px;
+    width: 38px; height: 38px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; font-weight: 700; margin-bottom: 8px;
   }
-
   .avatar-ram { background: #D8F3DC; color: #1B4332; }
   .avatar-sam { background: #FFF3CD; color: #7D5200; }
-
-  .kid-name { font-size: 16px; font-weight: 700; color: var(--text); }
-  .kid-age  { font-size: 11px; color: var(--muted); margin-bottom: 12px; }
-
-  .pts-big  { font-size: 36px; font-weight: 700; line-height: 1; color: var(--text); }
-  .pts-sub  { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
-
-  .bar-bg {
-    height: 6px;
-    background: var(--bg);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 8px;
-  }
-
-  .bar-fill {
-    height: 100%;
-    border-radius: 3px;
-    transition: width 0.5s cubic-bezier(.4,0,.2,1);
-  }
-
+  .kid-name { font-size: 15px; font-weight: 700; color: var(--text); }
+  .kid-age  { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .pts-big  { font-size: 34px; font-weight: 700; line-height: 1; color: var(--text); }
+  .pts-sub  { font-size: 11px; color: var(--muted); margin-bottom: 8px; }
+  .bar-bg { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-bottom: 7px; }
+  .bar-fill { height: 100%; border-radius: 3px; transition: width 0.5s cubic-bezier(.4,0,.2,1); }
   .badge {
-    font-size: 11px;
-    padding: 3px 10px;
-    border-radius: 20px;
-    display: inline-block;
-    margin-bottom: 12px;
-    font-weight: 500;
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    display: inline-block; margin-bottom: 10px; font-weight: 500;
   }
-
   .b-green { background: var(--green-light); color: var(--green-text); }
   .b-amber { background: var(--amber-light); color: var(--amber-text); }
   .b-red   { background: var(--red-light);   color: var(--red-text);   }
@@ -158,217 +99,110 @@
   .f-red   { background: var(--red);   }
 
   .act-btns { display: flex; flex-direction: column; gap: 6px; }
-
   .act-btn {
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 7px 10px;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 12px;
-    font-weight: 500;
-    background: transparent;
-    cursor: pointer;
-    text-align: right;
-    transition: background 0.15s;
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    padding: 7px 10px; font-family: 'Tajawal', sans-serif;
+    font-size: 12px; font-weight: 500; background: transparent;
+    cursor: pointer; text-align: right; transition: background 0.15s;
   }
-
   .act-btn:active { transform: scale(0.97); }
-  .act-btn.minus  { border-color: #F5C6CA; color: var(--red);   }
-  .act-btn.plus   { border-color: #B7DFC0; color: var(--green); }
+  .act-btn.minus { border-color: #F5C6CA; color: var(--red); }
+  .act-btn.plus  { border-color: #B7DFC0; color: var(--green); }
   .act-btn.minus:hover { background: var(--red-light); }
   .act-btn.plus:hover  { background: var(--green-light); }
 
-  .log-area {
-    margin-top: 10px;
-    max-height: 72px;
-    overflow-y: auto;
-    font-size: 11px;
-    color: var(--muted);
-  }
+  .log-area { margin-top: 8px; max-height: 68px; overflow-y: auto; font-size: 11px; color: var(--muted); }
+  .log-entry { padding: 3px 0; border-bottom: 1px solid var(--border); }
 
-  .log-entry {
-    padding: 3px 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  /* ── Footer Buttons ── */
-  .foot-btns {
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
+  .foot-btns { display: flex; gap: 8px; margin-top: 10px; }
   .foot-btn {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--card);
-    font-family: 'Tajawal', sans-serif;
-    font-size: 13px;
-    color: var(--muted);
-    cursor: pointer;
-    transition: background 0.15s;
+    flex: 1; padding: 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: var(--card);
+    font-family: 'Tajawal', sans-serif; font-size: 13px;
+    color: var(--muted); cursor: pointer; transition: background 0.15s;
   }
-
   .foot-btn:hover { background: #eee; }
-  .foot-btn.danger { color: var(--red); border-color: #F5C6CA; }
+  .foot-btn.excel  { color: var(--green); border-color: #B7DFC0; }
+  .foot-btn.danger { color: var(--red);   border-color: #F5C6CA; }
 
-  .export-box {
-    display: none;
-    margin-top: 10px;
-    background: #1A1A1A;
-    color: #D4F5D4;
-    border-radius: var(--radius-sm);
-    padding: 1rem;
-    font-family: 'Courier New', monospace;
-    font-size: 12px;
-    white-space: pre-wrap;
-    direction: ltr;
-    text-align: left;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  /* ── Rules Tab ── */
   .section {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 1rem;
-    margin-bottom: 10px;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1rem; margin-bottom: 10px;
   }
-
-  .sec-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
+  .sec-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; }
   .rule-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 13px;
   }
-
   .rule-row:last-child { border-bottom: none; }
-
-  .rule-pts {
-    font-weight: 700;
-    font-size: 13px;
-    min-width: 40px;
-    text-align: left;
-  }
-
+  .rule-pts { font-weight: 700; font-size: 13px; min-width: 40px; text-align: left; }
   .pts-r { color: var(--red); }
   .pts-g { color: var(--green); }
-
-  /* ── History Tab ── */
   .hist-row {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
+    display: flex; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px;
   }
-
   .hist-row:last-child { border-bottom: none; }
 
-  /* ── Toast ── */
   .toast {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: var(--green);
-    color: #fff;
-    padding: 7px 18px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-family: 'Tajawal', sans-serif;
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    white-space: nowrap;
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--green); color: #fff;
+    padding: 7px 18px; border-radius: 20px;
+    font-size: 13px; font-family: 'Tajawal', sans-serif;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
   }
 
-  /* ── Modal ── */
   .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 100;
-    align-items: flex-end;
-    justify-content: center;
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4); z-index: 100;
+    align-items: flex-end; justify-content: center;
   }
-
   .modal-overlay.open { display: flex; }
-
   .modal {
-    background: var(--card);
-    border-radius: var(--radius) var(--radius) 0 0;
-    padding: 1.5rem 1rem;
-    width: 100%;
-    max-width: 480px;
+    background: var(--card); border-radius: var(--radius) var(--radius) 0 0;
+    padding: 1.5rem 1rem; width: 100%; max-width: 480px;
     animation: slideUp 0.25s ease;
   }
-
-  @keyframes slideUp {
-    from { transform: translateY(60px); opacity: 0; }
-    to   { transform: translateY(0);    opacity: 1; }
-  }
-
-  .modal h3 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: var(--text);
-  }
+  @keyframes slideUp { from{transform:translateY(60px);opacity:0} to{transform:translateY(0);opacity:1} }
+  .modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; color: var(--text); }
+  .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 1rem; }
 
   .modal-option {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    margin-bottom: 8px;
-    cursor: pointer;
-    font-size: 13px;
-    font-family: 'Tajawal', sans-serif;
-    background: var(--bg);
-    transition: background 0.15s;
-    width: 100%;
-    text-align: right;
-    color: var(--text);
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); margin-bottom: 8px;
+    cursor: pointer; font-size: 13px; font-family: 'Tajawal', sans-serif;
+    background: var(--bg); transition: background 0.15s;
+    width: 100%; text-align: right; color: var(--text);
   }
-
   .modal-option:hover { background: #eee; }
+  .opt-pts { font-weight: 700; font-size: 13px; }
 
-  .modal-option .opt-pts {
-    font-weight: 700;
-    font-size: 13px;
+  .confirm-box {
+    display: none; background: var(--red-light);
+    border: 1px solid #F5C6CA; border-radius: var(--radius-sm);
+    padding: 12px; margin-bottom: 10px; text-align: center;
   }
-
+  .confirm-box.show { display: block; }
+  .confirm-box.plus-box { background: var(--green-light); border-color: #B7DFC0; }
+  .confirm-msg { font-size: 13px; color: var(--red-text); margin-bottom: 10px; font-weight: 500; }
+  .confirm-msg.plus-msg { color: var(--green-text); }
+  .confirm-btns { display: flex; gap: 8px; }
+  .confirm-yes {
+    flex: 1; padding: 8px; border: none; border-radius: var(--radius-sm);
+    background: var(--red); color: #fff;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .confirm-no {
+    flex: 1; padding: 8px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: transparent;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; color: var(--muted); cursor: pointer;
+  }
   .modal-cancel {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    font-family: 'Tajawal', sans-serif;
-    font-size: 13px;
-    color: var(--muted);
-    cursor: pointer;
-    margin-top: 4px;
+    width: 100%; padding: 10px; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); background: transparent;
+    font-family: 'Tajawal', sans-serif; font-size: 13px; color: var(--muted);
+    cursor: pointer; margin-top: 4px;
   }
 </style>
 </head>
@@ -376,7 +210,13 @@
 
 <header>
   <h1>نظام النقاط — عائلة Dawara</h1>
-  <p id="week-label"></p>
+  <div class="clock-wrap">
+    <div class="clock-dot"></div>
+    <div>
+      <div class="clock-time" id="clock-time">00:00:00</div>
+      <div class="clock-date" id="clock-date"></div>
+    </div>
+  </div>
 </header>
 
 <div class="tabs">
@@ -385,7 +225,6 @@
   <button class="tab" onclick="switchTab('history')">السجل</button>
 </div>
 
-<!-- ══ BOARD ══ -->
 <div class="panel active" id="panel-board">
   <div class="kids">
     <div class="kid-card">
@@ -402,7 +241,6 @@
       </div>
       <div class="log-area" id="log-0"></div>
     </div>
-
     <div class="kid-card">
       <div class="kid-avatar avatar-sam">S</div>
       <div class="kid-name">Sam</div>
@@ -418,15 +256,12 @@
       <div class="log-area" id="log-1"></div>
     </div>
   </div>
-
   <div class="foot-btns">
-    <button class="foot-btn" onclick="exportWeek()">تصدير الأسبوع</button>
+    <button class="foot-btn excel" onclick="exportExcel()">تصدير Excel</button>
     <button class="foot-btn danger" onclick="resetWeek()">تجديد الأسبوع</button>
   </div>
-  <div class="export-box" id="export-box"></div>
 </div>
 
-<!-- ══ RULES ══ -->
 <div class="panel" id="panel-rules">
   <div class="section">
     <div class="sec-title">المخالفات — خصم نقاط</div>
@@ -453,7 +288,6 @@
   </div>
 </div>
 
-<!-- ══ HISTORY ══ -->
 <div class="panel" id="panel-history">
   <div class="section">
     <div class="sec-title">سجل الأسابيع السابقة</div>
@@ -461,12 +295,20 @@
   </div>
 </div>
 
-<!-- ══ MODAL ══ -->
+<!-- Modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
   <div class="modal">
-    <h3 id="modal-title">اختر المخالفة</h3>
+    <h3 id="modal-title"></h3>
+    <div class="modal-sub" id="modal-sub"></div>
     <div id="modal-options"></div>
-    <button class="modal-cancel" onclick="closeModalDirect()">إلغاء</button>
+    <div class="confirm-box" id="confirm-box">
+      <div class="confirm-msg" id="confirm-msg"></div>
+      <div class="confirm-btns">
+        <button class="confirm-yes" id="confirm-yes-btn" onclick="confirmAction()">تأكيد — لا رجعة</button>
+        <button class="confirm-no" onclick="cancelConfirm()">تراجع</button>
+      </div>
+    </div>
+    <button class="modal-cancel" onclick="closeModalDirect()">إغلاق</button>
   </div>
 </div>
 
@@ -474,191 +316,216 @@
 
 <script>
 const MINUS_OPTIONS = [
-  ['الشجار أو الأذى', -20],
-  ['رفض الطاعة', -15],
-  ['الكذب', -10],
-  ['الفوضى وعدم الترتيب', -5],
-  ['التأخر عن الروتين', -5]
+  ['الشجار أو الأذى',-20],['رفض الطاعة',-15],
+  ['الكذب',-10],['الفوضى وعدم الترتيب',-5],['التأخر عن الروتين',-5]
 ];
 const PLUS_OPTIONS = [
-  ['مساعدة الأخ / الأخت', 15],
-  ['إتمام الواجب بدون تذكير', 10],
-  ['ترتيب الغرفة', 10],
-  ['سلوك ممتاز خارج البيت', 10],
-  ['مبادرة بدون طلب', 5]
+  ['مساعدة الأخ / الأخت',15],['إتمام الواجب بدون تذكير',10],
+  ['ترتيب الغرفة',10],['سلوك ممتاز خارج البيت',10],['مبادرة بدون طلب',5]
 ];
 
 const MAX = 100;
-let pts = [100, 100];
-let logs = [[], []];
-let weekStart = getWeekStart();
-let currentKid = 0;
+let pts=[100,100], logs=[[],[]], weekStart=getWeekStart();
+let currentKid=0, pendingDelta=0, pendingLabel='';
 
-function getWeekStart() {
-  const d = new Date();
-  const day = d.getDay();
-  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+/* Clock */
+function updateClock(){
+  const now=new Date();
+  document.getElementById('clock-time').textContent=
+    now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  document.getElementById('clock-date').textContent=
+    now.toLocaleDateString('ar-SA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+setInterval(updateClock,1000); updateClock();
+
+/* Storage */
+function getWeekStart(){
+  const d=new Date(), day=d.getDay();
+  const diff=d.getDate()-day+(day===0?-6:1);
   return new Date(new Date().setDate(diff)).toISOString().split('T')[0];
 }
-
-function save() {
-  localStorage.setItem('dawara-pts', JSON.stringify({ pts, logs, weekStart }));
+function save(){
+  localStorage.setItem('dawara-pts',JSON.stringify({pts,logs,weekStart}));
   showToast();
 }
-
-function load() {
-  const raw = localStorage.getItem('dawara-pts');
-  if (!raw) return;
-  const d = JSON.parse(raw);
-  if (d.weekStart === getWeekStart()) {
-    pts = d.pts || [100, 100];
-    logs = d.logs || [[], []];
-  } else {
-    archiveWeek(d);
-  }
-  render(0); render(1); renderLogs();
+function load(){
+  const raw=localStorage.getItem('dawara-pts');
+  if(!raw)return;
+  const d=JSON.parse(raw);
+  if(d.weekStart===getWeekStart()){ pts=d.pts||[100,100]; logs=d.logs||[[],[]]; }
+  else archiveWeek(d);
+  render(0);render(1);renderLogs();
+}
+function archiveWeek(d){
+  const raw=localStorage.getItem('dawara-history');
+  let arr=raw?JSON.parse(raw):[];
+  arr.unshift({week:d.weekStart,ram:d.pts[0],sam:d.pts[1],logsRam:d.logs[0],logsSam:d.logs[1]});
+  if(arr.length>12)arr=arr.slice(0,12);
+  localStorage.setItem('dawara-history',JSON.stringify(arr));
+  pts=[100,100];logs=[[],[]];weekStart=getWeekStart();
 }
 
-function archiveWeek(d) {
-  const raw = localStorage.getItem('dawara-history');
-  let arr = raw ? JSON.parse(raw) : [];
-  arr.unshift({ week: d.weekStart, ram: d.pts[0], sam: d.pts[1] });
-  if (arr.length > 12) arr = arr.slice(0, 12);
-  localStorage.setItem('dawara-history', JSON.stringify(arr));
-  pts = [100, 100]; logs = [[], []]; weekStart = getWeekStart();
+/* Render */
+function getStatus(p){
+  if(p>=80)return{text:'ممتاز',bc:'b-green',fc:'f-green'};
+  if(p>=60)return{text:'جيد',bc:'b-amber',fc:'f-amber'};
+  if(p>=40)return{text:'بحاجة تحسين',bc:'b-amber',fc:'f-amber'};
+  return{text:'ضعيف',bc:'b-red',fc:'f-red'};
 }
-
-function getStatus(p) {
-  if (p >= 80) return { text: 'ممتاز',        bc: 'b-green', fc: 'f-green' };
-  if (p >= 60) return { text: 'جيد',           bc: 'b-amber', fc: 'f-amber' };
-  if (p >= 40) return { text: 'بحاجة تحسين',  bc: 'b-amber', fc: 'f-amber' };
-  return             { text: 'ضعيف',           bc: 'b-red',   fc: 'f-red'   };
+function render(i){
+  const p=Math.max(0,Math.min(120,pts[i])), st=getStatus(p);
+  document.getElementById('pts-'+i).textContent=p;
+  const bar=document.getElementById('bar-'+i);
+  bar.style.width=Math.min(100,Math.round(p/MAX*100))+'%';
+  bar.className='bar-fill '+st.fc;
+  const badge=document.getElementById('badge-'+i);
+  badge.textContent=st.text; badge.className='badge '+st.bc;
 }
-
-function render(i) {
-  const p = Math.max(0, Math.min(120, pts[i]));
-  const st = getStatus(p);
-  document.getElementById('pts-' + i).textContent = p;
-  const bar = document.getElementById('bar-' + i);
-  bar.style.width = Math.min(100, Math.round(p / MAX * 100)) + '%';
-  bar.className = 'bar-fill ' + st.fc;
-  const badge = document.getElementById('badge-' + i);
-  badge.textContent = st.text;
-  badge.className = 'badge ' + st.bc;
-}
-
-function renderLogs() {
-  [0, 1].forEach(i => {
-    document.getElementById('log-' + i).innerHTML =
-      logs[i].slice(0, 8).map(e => `<div class="log-entry">${e}</div>`).join('');
+function renderLogs(){
+  [0,1].forEach(i=>{
+    document.getElementById('log-'+i).innerHTML=
+      logs[i].slice(0,8).map(e=>`<div class="log-entry">${e}</div>`).join('');
   });
 }
-
-function renderHistory() {
-  const raw = localStorage.getItem('dawara-history');
-  const el = document.getElementById('history-list');
-  if (!raw) { el.textContent = 'لا يوجد سجل بعد.'; return; }
-  const arr = JSON.parse(raw);
-  if (!arr.length) { el.textContent = 'لا يوجد سجل بعد.'; return; }
-  el.innerHTML = arr.map(w => {
-    const d = new Date(w.week);
-    const label = d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'long' });
-    const ramSt = getStatus(w.ram).text;
-    const samSt = getStatus(w.sam).text;
-    return `<div class="hist-row">
-      <span>أسبوع ${label}</span>
-      <span style="color:var(--muted);font-size:12px">Ram: ${w.ram} (${ramSt}) &nbsp;|&nbsp; Sam: ${w.sam} (${samSt})</span>
-    </div>`;
+function renderHistory(){
+  const raw=localStorage.getItem('dawara-history');
+  const el=document.getElementById('history-list');
+  if(!raw){el.textContent='لا يوجد سجل بعد.';return;}
+  const arr=JSON.parse(raw);
+  if(!arr.length){el.textContent='لا يوجد سجل بعد.';return;}
+  el.innerHTML=arr.map(w=>{
+    const d=new Date(w.week);
+    const label=d.toLocaleDateString('ar-SA',{day:'numeric',month:'long'});
+    return `<div class="hist-row"><span>أسبوع ${label}</span>
+    <span style="color:var(--muted);font-size:12px">Ram:${w.ram} | Sam:${w.sam}</span></div>`;
   }).join('');
 }
 
-function openModal(kid, type) {
-  currentKid = kid;
-  const options = type === 'minus' ? MINUS_OPTIONS : PLUS_OPTIONS;
-  const names = ['Ram', 'Sam'];
-  document.getElementById('modal-title').textContent =
-    names[kid] + ' — ' + (type === 'minus' ? 'اختر المخالفة' : 'اختر الإنجاز');
-  document.getElementById('modal-options').innerHTML = options.map(([label, val]) => {
-    const sign = val > 0 ? '+' : '';
-    const col = val > 0 ? 'var(--green)' : 'var(--red)';
-    return `<button class="modal-option" onclick="applyAction(${val}, '${label}')">
-      <span>${label}</span>
-      <span class="opt-pts" style="color:${col}">${sign}${val}</span>
-    </button>`;
+/* Modal */
+function openModal(kid,type){
+  currentKid=kid; pendingDelta=0; pendingLabel='';
+  const opts=type==='minus'?MINUS_OPTIONS:PLUS_OPTIONS;
+  const names=['Ram','Sam'];
+  document.getElementById('modal-title').textContent=
+    names[kid]+' — '+(type==='minus'?'اختر المخالفة':'اختر الإنجاز');
+  document.getElementById('modal-sub').textContent=
+    type==='minus'?'بعد الاختيار ستظهر خطوة تأكيد — لا يمكن التراجع بعدها':'اختر الإنجاز المراد تسجيله';
+  document.getElementById('modal-options').innerHTML=opts.map(([label,val])=>{
+    const sign=val>0?'+':'', col=val>0?'var(--green)':'var(--red)';
+    return `<button class="modal-option" onclick="selectOption(${val},'${label}')">
+      <span>${label}</span><span class="opt-pts" style="color:${col}">${sign}${val}</span></button>`;
   }).join('');
+  document.getElementById('confirm-box').classList.remove('show');
+  document.getElementById('modal-options').style.opacity='1';
+  document.getElementById('modal-options').style.pointerEvents='auto';
   document.getElementById('modal-overlay').classList.add('open');
 }
-
-function closeModal(e) {
-  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+function selectOption(val,label){
+  pendingDelta=val; pendingLabel=label;
+  const isPlus=val>0, sign=isPlus?'+':'';
+  const names=['Ram','Sam'];
+  const box=document.getElementById('confirm-box');
+  const msg=document.getElementById('confirm-msg');
+  const btn=document.getElementById('confirm-yes-btn');
+  msg.textContent=`${names[currentKid]}: ${sign}${val} — ${label}`;
+  msg.className='confirm-msg'+(isPlus?' plus-msg':'');
+  box.className='confirm-box show'+(isPlus?' plus-box':'');
+  btn.style.background=isPlus?'var(--green)':'var(--red)';
+  document.getElementById('modal-options').style.opacity='0.35';
+  document.getElementById('modal-options').style.pointerEvents='none';
 }
-
-function closeModalDirect() {
+function cancelConfirm(){
+  document.getElementById('confirm-box').classList.remove('show');
+  document.getElementById('modal-options').style.opacity='1';
+  document.getElementById('modal-options').style.pointerEvents='auto';
+  pendingDelta=0; pendingLabel='';
+}
+function confirmAction(){
+  if(!pendingLabel)return;
+  pts[currentKid]=Math.max(0,pts[currentKid]+pendingDelta);
+  const now=new Date().toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+  const sign=pendingDelta>0?'+':'';
+  logs[currentKid].unshift(`${now} ${sign}${pendingDelta} — ${pendingLabel}`);
+  render(currentKid); renderLogs(); save(); closeModalDirect();
+}
+function closeModal(e){ if(e.target===document.getElementById('modal-overlay'))closeModalDirect(); }
+function closeModalDirect(){
   document.getElementById('modal-overlay').classList.remove('open');
+  document.getElementById('modal-options').style.opacity='1';
+  document.getElementById('modal-options').style.pointerEvents='auto';
+  document.getElementById('confirm-box').classList.remove('show');
+  pendingDelta=0; pendingLabel='';
 }
 
-function applyAction(delta, label) {
-  pts[currentKid] = Math.max(0, pts[currentKid] + delta);
-  const now = new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' });
-  const sign = delta > 0 ? '+' : '';
-  logs[currentKid].unshift(`${now} ${sign}${delta} — ${label}`);
-  render(currentKid);
-  renderLogs();
-  save();
-  closeModalDirect();
+/* Toast */
+function showToast(){
+  const t=document.getElementById('toast');
+  t.style.opacity='1'; setTimeout(()=>t.style.opacity='0',1800);
 }
 
-function showToast() {
-  const t = document.getElementById('toast');
-  t.style.opacity = '1';
-  setTimeout(() => t.style.opacity = '0', 1800);
+/* Tabs */
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>
+    t.classList.toggle('active',['board','rules','history'][i]===name));
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(name==='history')renderHistory();
 }
 
-function switchTab(name) {
-  document.querySelectorAll('.tab').forEach((t, i) => {
-    t.classList.toggle('active', ['board', 'rules', 'history'][i] === name);
+/* Export Excel */
+function exportExcel(){
+  const wb=XLSX.utils.book_new();
+  const dateStr=new Date().toLocaleDateString('ar-SA',{day:'numeric',month:'long',year:'numeric'});
+
+  // Sheet 1: ملخص
+  const ws1=XLSX.utils.aoa_to_sheet([
+    ['ملخص الأسبوع',dateStr],[],
+    ['الاسم','النقاط الحالية','من','التقييم'],
+    ['Ram',pts[0],100,getStatus(pts[0]).text],
+    ['Sam',pts[1],100,getStatus(pts[1]).text],
+  ]);
+  ws1['!cols']=[{wch:16},{wch:14},{wch:8},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'ملخص');
+
+  // Sheet 2 & 3: سجلات
+  [[logs[0],'سجل Ram'],[logs[1],'سجل Sam']].forEach(([log,name])=>{
+    const rows=[['الوقت','التفصيل','النقاط']];
+    log.forEach(e=>{
+      const m=e.match(/^(\S+)\s([+\-]\d+)\s—\s(.+)$/);
+      if(m)rows.push([m[1],m[3],Number(m[2])]);
+      else rows.push([e,'','']);
+    });
+    if(rows.length===1)rows.push(['—','—','']);
+    const ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:12},{wch:28},{wch:10}];
+    XLSX.utils.book_append_sheet(wb,ws,name);
   });
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  if (name === 'history') renderHistory();
+
+  // Sheet 4: تاريخ الأسابيع
+  const histRaw=localStorage.getItem('dawara-history');
+  const histArr=histRaw?JSON.parse(histRaw):[];
+  const histRows=[['الأسبوع','Ram','Sam','تقييم Ram','تقييم Sam']];
+  histArr.forEach(w=>histRows.push([w.week,w.ram,w.sam,getStatus(w.ram).text,getStatus(w.sam).text]));
+  if(histRows.length===1)histRows.push(['—','—','—','—','—']);
+  const ws4=XLSX.utils.aoa_to_sheet(histRows);
+  ws4['!cols']=[{wch:16},{wch:8},{wch:8},{wch:16},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws4,'تاريخ الأسابيع');
+
+  XLSX.writeFile(wb,`dawara-${new Date().toISOString().split('T')[0]}.xlsx`);
 }
 
-function exportWeek() {
-  const box = document.getElementById('export-box');
-  const d = new Date().toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
-  const r = getStatus(pts[0]).text, s = getStatus(pts[1]).text;
-  const text = [
-    `ملخص الأسبوع — ${d}`,
-    '─'.repeat(32),
-    `Ram : ${pts[0]}/100 — ${r}`,
-    `Sam : ${pts[1]}/100 — ${s}`,
-    '─'.repeat(32),
-    'سجل Ram:',
-    ...(logs[0].slice(0, 10).length ? logs[0].slice(0, 10) : ['—']),
-    'سجل Sam:',
-    ...(logs[1].slice(0, 10).length ? logs[1].slice(0, 10) : ['—']),
-  ].join('\n');
-  box.style.display = box.style.display === 'block' ? 'none' : 'block';
-  box.textContent = text;
+/* Reset */
+function resetWeek(){
+  if(!confirm('تجديد الأسبوع؟ سيتم حفظ النتائج في السجل.'))return;
+  const raw=localStorage.getItem('dawara-history');
+  let arr=raw?JSON.parse(raw):[];
+  arr.unshift({week:weekStart,ram:pts[0],sam:pts[1],logsRam:logs[0],logsSam:logs[1]});
+  if(arr.length>12)arr=arr.slice(0,12);
+  localStorage.setItem('dawara-history',JSON.stringify(arr));
+  pts=[100,100];logs=[[],[]];weekStart=getWeekStart();
+  render(0);render(1);renderLogs();save();
 }
 
-function resetWeek() {
-  if (!confirm('تجديد الأسبوع؟ سيتم حفظ النتائج في السجل.')) return;
-  const raw = localStorage.getItem('dawara-history');
-  let arr = raw ? JSON.parse(raw) : [];
-  arr.unshift({ week: weekStart, ram: pts[0], sam: pts[1] });
-  if (arr.length > 12) arr = arr.slice(0, 12);
-  localStorage.setItem('dawara-history', JSON.stringify(arr));
-  pts = [100, 100]; logs = [[], []]; weekStart = getWeekStart();
-  render(0); render(1); renderLogs();
-  document.getElementById('export-box').style.display = 'none';
-  save();
-}
-
-// Init
-const d = new Date();
-document.getElementById('week-label').textContent =
-  'أسبوع ' + d.toLocaleDateString('ar-SA', { day: 'numeric', month: 'long', year: 'numeric' });
 load();
 </script>
 </body>
